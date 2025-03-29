@@ -38,12 +38,18 @@ app.get('/teams/:id', async (req, res) => {
   }
 });
 
-// Obtener los juegos en los que participa un equipo (como visitante o local)
 app.get('/games/team/:team', async (req, res) => {
   const { team } = req.params;
   try {
     const result = await pool.query(
-      'SELECT * FROM games WHERE visitor_team = $1 OR home_team = $1',
+      `SELECT 
+         g.*,
+         t1.team_logo AS visitor_team_logo,
+         t2.team_logo AS home_team_logo
+       FROM games g
+       JOIN teams t1 ON g.visitor_team = t1.team_name
+       JOIN teams t2 ON g.home_team = t2.team_name
+       WHERE g.visitor_team = $1 OR g.home_team = $1`,
       [team]
     );
     if (result.rows.length === 0) {
@@ -55,6 +61,7 @@ app.get('/games/team/:team', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
 
 
 // Iniciar servidor

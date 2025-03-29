@@ -38,20 +38,24 @@ app.get('/teams/:id', async (req, res) => {
   }
 });
 
-// Crear un nuevo equipo
-app.post('/teams', async (req, res) => {
-  const { team_name, team_stadium, team_logo } = req.body;
+// Obtener los juegos en los que participa un equipo (como visitante o local)
+app.get('/games/team/:team', async (req, res) => {
+  const { team } = req.params;
   try {
     const result = await pool.query(
-      'INSERT INTO teams (team_name, team_stadium, team_logo) VALUES ($1, $2, $3) RETURNING *',
-      [team_name, team_stadium, team_logo]
+      'SELECT * FROM games WHERE visitor_team = $1 OR home_team = $1',
+      [team]
     );
-    res.status(201).json(result.rows[0]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: `No se encontraron juegos para el equipo ${team}` });
+    }
+    res.json(result.rows);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
 
 // Iniciar servidor
 app.listen(process.env.PORT || 4000, () => {

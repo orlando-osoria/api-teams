@@ -39,7 +39,9 @@ app.get('/teams/:id', async (req, res) => {
 });
 
 app.get('/games/team/:team', async (req, res) => {
-  const { team } = req.params;
+  // Convertir el parámetro a entero
+  const teamId = parseInt(req.params.team, 10);
+  
   try {
     const result = await pool.query(
       `SELECT 
@@ -52,10 +54,10 @@ app.get('/games/team/:team', async (req, res) => {
        JOIN teams t1 ON g.visitor_team = t1.id
        JOIN teams t2 ON g.home_team = t2.id
        WHERE g.visitor_team = $1 OR g.home_team = $1`,
-      [team]
+      [teamId]
     );
     if (result.rows.length === 0) {
-      return res.status(404).json({ message: `No se encontraron juegos para el equipo ${team}` });
+      return res.status(404).json({ message: `No se encontraron juegos para el equipo ${teamId}` });
     }
     res.json(result.rows);
   } catch (err) {
@@ -63,8 +65,6 @@ app.get('/games/team/:team', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
-
-
 
 // Iniciar servidor
 app.listen(process.env.PORT || 4000, () => {
